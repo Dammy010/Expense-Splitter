@@ -11,8 +11,10 @@ dotenv.config();
 
 const app = express();
 
+// ✅ Allow both localhost (for dev) and Vercel (for prod)
 const allowedOrigins = [
   'http://localhost:5174',
+  'http://localhost:3000',
   'https://expense-splitter-ruby.vercel.app',
 ];
 
@@ -22,6 +24,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn(`Blocked by CORS: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -31,12 +34,13 @@ app.use(
 
 app.use(express.json());
 
+// ✅ Mount routes with clear base paths
 app.use('/api/bills', billRoutes);
 app.use('/api/shares', shareRoutes);
-app.use('/api/auth', authRoutes); 
+app.use('/api/auth', authRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Expense Splitter backend is running ✅");
+app.get('/', (req, res) => {
+  res.send('✅ Expense Splitter backend is running');
 });
 
 const PORT = process.env.PORT || 4000;
@@ -49,7 +53,9 @@ mongoose
   })
   .then(() => {
     console.log('✅ MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running at http://localhost:${PORT}`)
+    );
   })
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
